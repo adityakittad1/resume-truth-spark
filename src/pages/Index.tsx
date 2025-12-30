@@ -149,7 +149,7 @@ const Index = () => {
             <motion.img 
               src={logo} 
               alt="Resumate" 
-              className="h-10 w-auto"
+              className="h-14 w-auto"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400 }}
             />
