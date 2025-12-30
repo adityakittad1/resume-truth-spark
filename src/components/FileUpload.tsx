@@ -8,11 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import * as pdfjsLib from "pdfjs-dist";
 import mammoth from "mammoth";
-
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface FileUploadProps {
   onFileSelect: (file: File | null, text: string | null) => void;
@@ -23,6 +19,7 @@ interface FileUploadProps {
 const ACCEPTED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -31,24 +28,83 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Extract text from PDF using pdf.js
+  // Extract text from PDF using basic binary parsing
   const extractPdfText = async (file: File): Promise<string> => {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const bytes = new Uint8Array(arrayBuffer);
       
-      let fullText = "";
+      // Convert to string for text extraction
+      let text = "";
       
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(" ");
-        fullText += pageText + "\n";
+      // Try to decode as UTF-8 first
+      try {
+        const decoder = new TextDecoder("utf-8", { fatal: false });
+        const rawText = decoder.decode(bytes);
+        
+        // Extract text between stream markers and from text objects
+        // PDF text is often between BT...ET markers or in parentheses
+        const textMatches = rawText.match(/\(([^)]+)\)/g) || [];
+        const streamMatches = rawText.match(/BT[\s\S]*?ET/g) || [];
+        
+        // Extract readable strings from the PDF
+        textMatches.forEach(match => {
+          const cleaned = match.slice(1, -1)
+            .replace(/\\n/g, " ")
+            .replace(/\\r/g, " ")
+            .replace(/\\/g, "");
+          if (cleaned.length > 2 && /[a-zA-Z]/.test(cleaned)) {
+            text += cleaned + " ";
+          }
+        });
+        
+        // Also try to extract from streams
+        streamMatches.forEach(stream => {
+          const tjMatches = stream.match(/\[([^\]]+)\]\s*TJ/g) || [];
+          tjMatches.forEach(tj => {
+            const parts = tj.match(/\(([^)]+)\)/g) || [];
+            parts.forEach(part => {
+              const cleaned = part.slice(1, -1);
+              if (cleaned.length > 1) {
+                text += cleaned;
+              }
+            });
+            text += " ";
+          });
+          
+          const textMatches = stream.match(/\(([^)]+)\)\s*Tj/g) || [];
+          textMatches.forEach(match => {
+            const cleaned = match.replace(/\)\s*Tj$/, "").slice(1);
+            if (cleaned.length > 1) {
+              text += cleaned + " ";
+            }
+          });
+        });
+      } catch (e) {
+        console.log("UTF-8 decode failed, trying Latin-1");
       }
       
-      return fullText.trim();
+      // Clean up the extracted text
+      text = text
+        .replace(/\s+/g, " ")
+        .replace(/[^\x20-\x7E\n]/g, " ")
+        .trim();
+      
+      // If we couldn't extract much, try a simpler approach
+      if (text.length < 100) {
+        // Simple approach: extract all printable ASCII sequences
+        const decoder = new TextDecoder("latin1");
+        const rawText = decoder.decode(bytes);
+        
+        // Find all sequences of printable characters
+        const sequences = rawText.match(/[\x20-\x7E]{4,}/g) || [];
+        text = sequences
+          .filter(s => /[a-zA-Z]{2,}/.test(s)) // Must contain letters
+          .filter(s => !/^[%\/\[\]<>{}]+$/.test(s)) // Skip PDF syntax
+          .join(" ");
+      }
+      
+      return text.trim();
     } catch (err) {
       console.error("PDF extraction error:", err);
       throw new Error("Failed to extract text from PDF");
@@ -67,22 +123,43 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
     }
   };
 
+  // Extract text from plain text file
+  const extractPlainText = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve((e.target?.result as string) || "");
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  };
+
   // Main extraction function
   const extractText = async (file: File): Promise<string> => {
-    if (file.type === "application/pdf") {
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
       return await extractPdfText(file);
     }
     
-    if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || 
+        file.name.toLowerCase().endsWith(".docx")) {
       return await extractDocxText(file);
+    }
+
+    if (file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt")) {
+      return await extractPlainText(file);
     }
 
     throw new Error("Unsupported file type");
   };
 
   const validateFile = (file: File): string | null => {
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      return "Please upload a PDF or DOCX file";
+    const fileName = file.name.toLowerCase();
+    const isValidType = ACCEPTED_TYPES.includes(file.type) || 
+                        fileName.endsWith(".pdf") || 
+                        fileName.endsWith(".docx") || 
+                        fileName.endsWith(".txt");
+    
+    if (!isValidType) {
+      return "Please upload a PDF, DOCX, or TXT file";
     }
     if (file.size > MAX_FILE_SIZE) {
       return "File size must be less than 10MB";
@@ -105,15 +182,16 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
       const text = await extractText(file);
       
       if (!text || text.length < 50) {
-        setError("Could not extract enough text from the file. Please ensure your resume contains readable text.");
+        setError("Could not extract enough text from the file. Please try a DOCX or TXT version of your resume.");
         onFileSelect(null, null);
         return;
       }
       
+      console.log("Extracted text length:", text.length);
       onFileSelect(file, text);
     } catch (err) {
       console.error("File processing error:", err);
-      setError("Failed to read file. Please try a different file or ensure it contains readable text.");
+      setError("Failed to read file. Please try a DOCX or TXT version.");
       onFileSelect(null, null);
     } finally {
       setIsProcessing(false);
@@ -204,9 +282,10 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
                 isProcessing && "pointer-events-none opacity-60"
               )}
             >
+              {/* Accept all common file types to avoid "Customized Files" filter */}
               <input
                 type="file"
-                accept=".pdf,.docx"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                 onChange={handleInputChange}
                 className="hidden"
                 disabled={isProcessing}
@@ -228,7 +307,7 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
                     {isProcessing ? "Extracting text from resume..." : "Drop your resume here"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    or click to browse (PDF, DOCX up to 10MB)
+                    PDF, DOCX, or TXT (up to 10MB)
                   </p>
                 </div>
               </motion.div>
