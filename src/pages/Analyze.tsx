@@ -5,12 +5,13 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, RefreshCw, FileSearch } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/PageTransition";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { FileUpload } from "@/components/FileUpload";
 import { RoleSelector } from "@/components/RoleSelector";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
@@ -69,43 +70,87 @@ export default function Analyze() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Animated background */}
+        <div className="fixed inset-0 -z-10 overflow-hidden">
+          <motion.div
+            className="absolute top-1/4 -left-20 w-60 h-60 bg-primary/10 rounded-full blur-3xl"
+            animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 -right-20 w-72 h-72 bg-accent/10 rounded-full blur-3xl"
+            animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+        <motion.header
+          className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50"
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <img src={logo} alt="Resumate" className="h-8 w-auto" />
+              <motion.img 
+                src={logo} 
+                alt="Resumate" 
+                className="h-10 w-auto"
+                whileHover={{ scale: 1.05 }}
+              />
             </Link>
-            <h1 className="text-lg font-bold text-primary">Resume Analyzer</h1>
-            <FeedbackDialog pageName="Analyze Page" />
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10">
+                <FileSearch className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">Resume Analyzer</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <FeedbackDialog pageName="Analyze Page" />
+            </div>
           </div>
-        </header>
+        </motion.header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 pt-20 pb-16 max-w-2xl">
+        <main className="flex-1 container mx-auto px-4 pt-24 pb-16 max-w-2xl">
           <AnimatePresence mode="wait">
             {/* Step 1: Upload */}
             {step === "upload" && (
               <motion.div
                 key="upload"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upload Your Resume</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FileUpload onFileSelect={handleFileSelect} selectedFile={file} />
-                    <Button
-                      className="w-full"
-                      disabled={!file}
-                      onClick={() => setStep("role")}
+                <Card className="border-border/50 shadow-xl bg-card/80 backdrop-blur-sm">
+                  <CardHeader className="text-center pb-2">
+                    <motion.div
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-4"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.2 }}
                     >
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                      <FileSearch className="w-8 h-8 text-primary" />
+                    </motion.div>
+                    <CardTitle className="text-2xl">Upload Your Resume</CardTitle>
+                    <p className="text-muted-foreground text-sm mt-2">PDF, DOCX, or TXT format supported</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-4">
+                    <FileUpload onFileSelect={handleFileSelect} selectedFile={file} />
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        className="w-full py-6 text-lg shadow-lg shadow-primary/25"
+                        disabled={!file}
+                        onClick={() => setStep("role")}
+                      >
+                        Continue
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </motion.div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -115,32 +160,44 @@ export default function Analyze() {
             {step === "role" && (
               <motion.div
                 key="role"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Select Target Role</CardTitle>
+                <Card className="border-border/50 shadow-xl bg-card/80 backdrop-blur-sm">
+                  <CardHeader className="text-center pb-2">
+                    <motion.div
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-4"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.2 }}
+                    >
+                      <FileSearch className="w-8 h-8 text-accent" />
+                    </motion.div>
+                    <CardTitle className="text-2xl">Select Target Role</CardTitle>
+                    <p className="text-muted-foreground text-sm mt-2">Choose the role you're applying for</p>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6 pt-4">
                     <RoleSelector
                       selectedRole={selectedRole}
                       onRoleSelect={handleRoleSelect}
                     />
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setStep("upload")}>
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setStep("upload")} className="px-6">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back
                       </Button>
-                      <Button
-                        className="flex-1"
-                        disabled={!selectedRole}
-                        onClick={startAnalysis}
-                      >
-                        Analyze Resume
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
+                      <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button
+                          className="w-full py-6 text-lg shadow-lg shadow-primary/25"
+                          disabled={!selectedRole}
+                          onClick={startAnalysis}
+                        >
+                          Analyze Resume
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </Button>
+                      </motion.div>
                     </div>
                   </CardContent>
                 </Card>
@@ -151,12 +208,12 @@ export default function Analyze() {
             {step === "analyzing" && (
               <motion.div
                 key="analyzing"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
               >
-                <Card>
-                  <CardContent className="py-8">
+                <Card className="border-border/50 shadow-xl bg-card/80 backdrop-blur-sm">
+                  <CardContent className="py-12">
                     <AnalysisLoading />
                   </CardContent>
                 </Card>
@@ -169,17 +226,19 @@ export default function Analyze() {
                 key="results"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
+                className="space-y-6"
               >
                 <AnalysisResults result={result} />
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={resetAnalysis}
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Analyze Another Resume
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant="outline"
+                    className="w-full py-6 text-lg border-2"
+                    onClick={resetAnalysis}
+                  >
+                    <RefreshCw className="w-5 h-5 mr-2" />
+                    Analyze Another Resume
+                  </Button>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
