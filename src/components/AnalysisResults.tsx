@@ -3,7 +3,6 @@
  * Displays comprehensive resume analysis with animations
  */
 
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Target, 
@@ -14,13 +13,10 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle,
-  Info,
-  Sparkles,
-  ArrowRight
+  Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScoreDisplay, ProgressBar } from "./ScoreDisplay";
 import { AnalysisResult } from "@/types/analyzer";
 import { getRoleById } from "@/config/roles";
@@ -259,33 +255,6 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
         Analyzed on {new Date(result.metadata.analyzedAt).toLocaleString()}
       </motion.p>
 
-      {/* Generate/Improve Resume CTA */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.0 }}
-      >
-        <Card className="border-accent/30 bg-gradient-to-r from-accent/10 to-primary/10">
-          <CardContent className="py-6 text-center">
-            <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-6 h-6 text-accent" />
-            </div>
-            <h3 className="font-semibold text-foreground mb-2">
-              Want to improve your resume?
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Build an ATS-optimized resume with our guided builder
-            </p>
-            <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Link to="/generator">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Better Resume
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
     </motion.div>
   );
 }
