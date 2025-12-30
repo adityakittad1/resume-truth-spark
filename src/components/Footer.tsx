@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Linkedin } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const Footer = () => {
@@ -22,11 +24,25 @@ const Footer = () => {
             <Link to="/generator" className="text-muted-foreground hover:text-foreground transition-colors">
               Generator
             </Link>
+            <motion.a
+              href="https://www.linkedin.com/company/resumate-io/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0A66C2] text-white rounded-lg font-medium text-sm"
+              whileHover={{ scale: 1.05, boxShadow: "0 4px 20px rgba(10, 102, 194, 0.4)" }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Linkedin className="w-4 h-4" />
+              Follow Us
+            </motion.a>
           </nav>
 
           {/* Copyright */}
-          <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Resumate. Built to help you land interviews.
+          <p className="text-muted-foreground text-sm text-center md:text-right">
+            © {new Date().getFullYear()} Resumate. Built by Aditya Kittad. Built to help you land interviews.
           </p>
         </div>
       </div>
