@@ -1,8 +1,11 @@
 /**
- * Resumate Resume Analyzer - Core Scoring Engine
+ * Resumate Resume Analyzer - Core Scoring Engine v2.0
  * 
- * Philosophy: Claims without evidence = penalties
- * Scoring is strict, evidence-based, and penalizes keyword stuffing
+ * Philosophy: Evidence-based, fair, and calibrated
+ * - Good resumes: 65-85%
+ * - Average resumes: 45-65%
+ * - Weak resumes: 20-45%
+ * - Keyword-stuffed: Penalized appropriately
  */
 
 import { 
@@ -57,7 +60,6 @@ const ROLE_REQUIREMENTS: Record<AllRoles, {
     projectIndicators: ["deployment", "pipeline", "infrastructure", "automation", "container"],
     experienceKeywords: ["deployed", "automated", "configured", "managed", "optimized"],
   },
-  // Extended roles with basic requirements
   "product-manager": {
     mandatorySkills: ["product", "roadmap", "stakeholder"],
     optionalSkills: ["agile", "scrum", "jira", "analytics", "user research", "a/b testing"],
@@ -140,31 +142,34 @@ export function analyzeResume(request: AnalysisRequest): AnalysisResult {
   const text = resumeText.toLowerCase();
   const requirements = ROLE_REQUIREMENTS[role];
 
-  // Component scores
+  // Component scores (max 100 total)
   const coreSkills = scoreCoreSkills(text, requirements);
   const projectQuality = scoreProjectQuality(text, requirements);
   const experienceDepth = scoreExperienceDepth(text, requirements);
   const resumeStructure = scoreResumeStructure(text);
 
-  // Calculate raw score
+  // Calculate raw score (sum of components)
   const rawScore = 
     coreSkills.score + 
     projectQuality.score + 
     experienceDepth.score + 
     resumeStructure.score;
 
-  // Apply penalties
+  // Calculate penalties (ADDITIVE, not multiplicative - fairer approach)
   const penalties = calculatePenalties(text, requirements, { coreSkills, projectQuality, experienceDepth });
   
-  let finalScore = rawScore;
+  let totalPenalty = 0;
   penalties.forEach((penalty) => {
     if (penalty.applied) {
-      finalScore *= penalty.multiplier;
+      totalPenalty += penalty.deduction;
     }
   });
 
-  // Apply hard caps based on evidence
-  finalScore = applyHardCaps(finalScore, { coreSkills, projectQuality, experienceDepth });
+  // Apply penalties (subtractive approach)
+  let finalScore = rawScore - totalPenalty;
+
+  // Apply soft caps based on evidence (less harsh than before)
+  finalScore = applySoftCaps(finalScore, { coreSkills, projectQuality, experienceDepth });
 
   // Ensure score is within bounds
   finalScore = Math.round(Math.max(0, Math.min(100, finalScore)));
@@ -177,7 +182,7 @@ export function analyzeResume(request: AnalysisRequest): AnalysisResult {
      (experienceDepth.maxScore + resumeStructure.maxScore)) * 100
   );
 
-  // Generate strengths and improvements (always non-empty)
+  // Generate strengths and improvements
   const strengths = generateStrengths(
     { coreSkills, projectQuality, experienceDepth, resumeStructure },
     role
@@ -215,8 +220,13 @@ export function analyzeResume(request: AnalysisRequest): AnalysisResult {
 }
 
 /**
- * Score core skills with evidence validation
+ * Score core skills - balanced approach
  * Max: 35 points
+ * 
+ * Changes from v1:
+ * - Skills listed get base credit (recruiters value skill mentions)
+ * - Bonus for evidence, not penalty for lacking it
+ * - Higher cap for mandatory skills
  */
 function scoreCoreSkills(
   text: string, 
@@ -227,52 +237,57 @@ function scoreCoreSkills(
   const foundMandatory: string[] = [];
   const foundOptional: string[] = [];
 
-  // Check mandatory skills with context window (200 chars for better evidence)
+  // Check mandatory skills
   requirements.mandatorySkills.forEach((skill) => {
-    const index = text.indexOf(skill);
-    if (index !== -1) {
-      // Check for context around the skill (evidence of usage)
-      const contextStart = Math.max(0, index - 100);
-      const contextEnd = Math.min(text.length, index + skill.length + 100);
+    if (text.includes(skill)) {
+      // Base points for having the skill
+      score += 4;
+      foundMandatory.push(skill);
+      
+      // Bonus for evidence (action verbs or project context nearby)
+      const index = text.indexOf(skill);
+      const contextStart = Math.max(0, index - 150);
+      const contextEnd = Math.min(text.length, index + skill.length + 150);
       const context = text.slice(contextStart, contextEnd);
       
-      // Look for action verbs or project context
       const hasEvidence = requirements.experienceKeywords.some((kw) => context.includes(kw)) ||
                          requirements.projectIndicators.some((pi) => context.includes(pi));
       
       if (hasEvidence) {
-        score += 7; // Full points for evidenced skill
-        foundMandatory.push(skill);
-      } else {
-        score += 3; // Partial points for mentioned but not evidenced
+        score += 2; // Bonus for evidenced skill
       }
     }
   });
 
-  // Cap mandatory skill score
-  score = Math.min(score, 21); // 3 mandatory skills * 7 points
+  // Cap mandatory skill score at 25 (allows more skills to count)
+  score = Math.min(score, 25);
 
-  // Check optional skills
+  // Check optional skills (1.5 points each, up to 10 points)
+  let optionalScore = 0;
   requirements.optionalSkills.forEach((skill) => {
     if (text.includes(skill)) {
-      score += 2;
+      optionalScore += 1.5;
       foundOptional.push(skill);
     }
   });
+  score += Math.min(optionalScore, 10);
 
-  // Cap optional skill score
   score = Math.min(score, maxScore);
 
   const details = foundMandatory.length > 0 
-    ? `Found ${foundMandatory.length} core skills with evidence, ${foundOptional.length} additional skills`
-    : "No mandatory skills found with clear evidence";
+    ? `Found ${foundMandatory.length} core skills, ${foundOptional.length} additional skills`
+    : "Limited mandatory skills detected";
 
-  return { score, maxScore, details };
+  return { score: Math.round(score), maxScore, details };
 }
 
 /**
  * Score project quality - looking for depth, not just mentions
  * Max: 30 points
+ * 
+ * Changes from v1:
+ * - More generous base scoring
+ * - Better pattern matching for project work
  */
 function scoreProjectQuality(
   text: string,
@@ -281,34 +296,40 @@ function scoreProjectQuality(
   const maxScore = 30;
   let score = 0;
 
-  // Check for project section existence
-  const hasProjectSection = /project|portfolio|work/i.test(text);
+  // Check for project section existence (broader patterns)
+  const hasProjectSection = /project|portfolio|work|built|developed|created/i.test(text);
   if (!hasProjectSection) {
-    return { score: 0, maxScore, details: "No project section detected" };
+    return { score: 3, maxScore, details: "No clear project work detected" };
   }
 
+  // Base score for having project-related content
+  score += 5;
+
   // Count project indicators
-  let projectCount = 0;
+  let projectIndicatorCount = 0;
   requirements.projectIndicators.forEach((indicator) => {
     const regex = new RegExp(indicator, "gi");
     const matches = text.match(regex);
     if (matches) {
-      projectCount += matches.length;
+      projectIndicatorCount += matches.length;
     }
   });
 
-  // Base score for having projects
-  if (projectCount >= 3) score += 10;
-  else if (projectCount >= 1) score += 5;
+  // Score based on project indicators (more generous)
+  if (projectIndicatorCount >= 5) score += 10;
+  else if (projectIndicatorCount >= 3) score += 7;
+  else if (projectIndicatorCount >= 1) score += 4;
 
   // Check for quantification (numbers, percentages, metrics)
   const quantificationPatterns = [
-    /\d+%/g,           // Percentages
-    /\d+\s*(users?|customers?|downloads?)/gi,  // User counts
-    /\d+x\s*(faster|improvement|increase)/gi,  // Multipliers
-    /reduced.*\d+/gi,  // Reduction metrics
-    /increased.*\d+/gi, // Increase metrics
-    /\$\d+/g,          // Dollar amounts
+    /\d+%/g,
+    /\d+\s*(users?|customers?|downloads?|visitors?)/gi,
+    /\d+x\s*(faster|improvement|increase|better)/gi,
+    /reduced.*\d+/gi,
+    /increased.*\d+/gi,
+    /improved.*\d+/gi,
+    /\$[\d,]+/g,
+    /\d+\s*(projects?|applications?|features?)/gi,
   ];
 
   let quantificationCount = 0;
@@ -317,18 +338,25 @@ function scoreProjectQuality(
     if (matches) quantificationCount += matches.length;
   });
 
-  if (quantificationCount >= 3) score += 15;
-  else if (quantificationCount >= 1) score += 8;
+  // Quantification scoring (key differentiator)
+  if (quantificationCount >= 4) score += 10;
+  else if (quantificationCount >= 2) score += 7;
+  else if (quantificationCount >= 1) score += 4;
 
   // Check for technology stack mentions in projects
-  const techStackPattern = /using|with|built with|tech stack|technologies/gi;
+  const techStackPattern = /using|with|built with|tech stack|technologies|stack/gi;
   if (techStackPattern.test(text)) {
-    score += 5;
+    score += 3;
+  }
+
+  // GitHub/Portfolio links are a strong signal
+  if (/github\.com|gitlab\.com|portfolio|live demo|deployed/i.test(text)) {
+    score += 2;
   }
 
   score = Math.min(score, maxScore);
 
-  const details = `${projectCount} project indicators, ${quantificationCount} quantified achievements`;
+  const details = `${projectIndicatorCount} project signals, ${quantificationCount} metrics`;
   return { score, maxScore, details };
 }
 
@@ -343,29 +371,41 @@ function scoreExperienceDepth(
   const maxScore = 20;
   let score = 0;
 
-  // Check for experience/work section
-  const hasExperienceSection = /experience|work history|employment|internship/i.test(text);
+  // Check for experience/work section (broader patterns for freshers)
+  const hasExperienceSection = /experience|work|employment|internship|project|freelance|volunteer/i.test(text);
   if (!hasExperienceSection) {
-    return { score: 3, maxScore, details: "No clear experience section" };
+    return { score: 4, maxScore, details: "No experience section detected" };
   }
 
-  // Count action verbs
+  // Base score for having experience section
+  score += 4;
+
+  // Count action verbs (important for strong writing)
   let actionVerbCount = 0;
-  requirements.experienceKeywords.forEach((keyword) => {
-    const regex = new RegExp(`\\b${keyword}\\b`, "gi");
+  const commonActionVerbs = [
+    ...requirements.experienceKeywords,
+    "led", "managed", "created", "improved", "launched", "designed", 
+    "built", "developed", "implemented", "achieved", "delivered"
+  ];
+  
+  commonActionVerbs.forEach((keyword) => {
+    const regex = new RegExp(`\\b${keyword}(ed|ing|s)?\\b`, "gi");
     const matches = text.match(regex);
     if (matches) actionVerbCount += matches.length;
   });
 
-  if (actionVerbCount >= 5) score += 10;
-  else if (actionVerbCount >= 3) score += 6;
-  else if (actionVerbCount >= 1) score += 3;
+  // Score for action verbs
+  if (actionVerbCount >= 8) score += 8;
+  else if (actionVerbCount >= 5) score += 6;
+  else if (actionVerbCount >= 3) score += 4;
+  else if (actionVerbCount >= 1) score += 2;
 
   // Check for dates (indicates real experience)
   const datePatterns = [
-    /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}/gi,
-    /\d{4}\s*-\s*(present|\d{4})/gi,
-    /\d{1,2}\/\d{4}/gi,
+    /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{2,4}/gi,
+    /\d{4}\s*[-–]\s*(present|\d{4})/gi,
+    /\d{1,2}\/\d{2,4}/gi,
+    /\b\d{4}\b/g, // Just years
   ];
 
   let hasDate = false;
@@ -373,16 +413,16 @@ function scoreExperienceDepth(
     if (pattern.test(text)) hasDate = true;
   });
 
-  if (hasDate) score += 5;
+  if (hasDate) score += 4;
 
-  // Check for company/organization names (capitalized words)
-  const orgPattern = /\bat\s+[A-Z][a-zA-Z]+/g;
-  const orgMatches = text.match(orgPattern);
-  if (orgMatches && orgMatches.length >= 1) score += 5;
+  // Check for organization/company mentions
+  if (/\bat\s+[A-Z][a-zA-Z]+|internship at|worked at|company|university|college/gi.test(text)) {
+    score += 4;
+  }
 
   score = Math.min(score, maxScore);
 
-  const details = `${actionVerbCount} action verbs, ${hasDate ? "dates present" : "no dates found"}`;
+  const details = `${actionVerbCount} action verbs, ${hasDate ? "dates present" : "no dates"}`;
   return { score, maxScore, details };
 }
 
@@ -394,29 +434,39 @@ function scoreResumeStructure(text: string): ComponentScore {
   const maxScore = 15;
   let score = 0;
 
-  // Essential sections
+  // Essential sections (3 points each)
   const sections = [
-    { pattern: /education|university|degree|bachelor|master/i, points: 3 },
-    { pattern: /skills|technologies|expertise/i, points: 3 },
-    { pattern: /experience|work|employment/i, points: 3 },
-    { pattern: /project|portfolio/i, points: 3 },
-    { pattern: /contact|email|phone|linkedin|github/i, points: 3 },
+    { pattern: /education|university|degree|bachelor|master|b\.?tech|b\.?e\.?|m\.?tech/i, points: 3 },
+    { pattern: /skills|technologies|expertise|proficient|competenc/i, points: 3 },
+    { pattern: /experience|work|employment|internship|project/i, points: 3 },
+    { pattern: /contact|email|phone|linkedin|github|@/i, points: 3 },
   ];
 
   sections.forEach(({ pattern, points }) => {
     if (pattern.test(text)) score += points;
   });
 
+  // Bonus for comprehensive resume
+  if (/objective|summary|about|profile/i.test(text)) {
+    score += 2;
+  }
+
+  // Bonus for certifications or achievements
+  if (/certification|certified|award|achievement|honor|publication/i.test(text)) {
+    score += 1;
+  }
+
   score = Math.min(score, maxScore);
 
   const sectionCount = sections.filter(({ pattern }) => pattern.test(text)).length;
-  const details = `${sectionCount}/5 essential sections present`;
+  const details = `${sectionCount}/4 key sections present`;
 
   return { score, maxScore, details };
 }
 
 /**
- * Calculate penalties for inconsistencies and red flags
+ * Calculate penalties - ADDITIVE approach (fairer than multiplicative)
+ * Total max penalty: 25 points
  */
 function calculatePenalties(
   text: string,
@@ -424,74 +474,80 @@ function calculatePenalties(
   scores: { coreSkills: ComponentScore; projectQuality: ComponentScore; experienceDepth: ComponentScore }
 ): PenaltyInfo[] {
   const penalties: PenaltyInfo[] = [];
+  const wordCount = text.split(/\s+/).length;
 
-  // Penalty: Skills mentioned but not evidenced in projects
+  // Penalty 1: Skills without ANY project evidence (max -8)
   const skillsMentioned = requirements.mandatorySkills.filter((s) => text.includes(s)).length;
-  const projectEvidence = requirements.projectIndicators.filter((p) => text.includes(p)).length;
+  const hasAnyProject = requirements.projectIndicators.some((p) => text.includes(p));
   
-  if (skillsMentioned > 0 && projectEvidence === 0) {
+  if (skillsMentioned >= 3 && !hasAnyProject) {
     penalties.push({
-      reason: "Skills listed but no project evidence",
-      multiplier: 0.75,
+      reason: "Skills listed but no project evidence found",
+      multiplier: 1, // Legacy field
+      deduction: 8,
       applied: true,
     });
   } else {
     penalties.push({
-      reason: "Skills listed but no project evidence",
-      multiplier: 0.75,
+      reason: "Skills listed but no project evidence found",
+      multiplier: 1,
+      deduction: 8,
       applied: false,
     });
   }
 
-  // Penalty: Keyword stuffing detection
-  const wordCount = text.split(/\s+/).length;
+  // Penalty 2: Keyword stuffing detection (max -12)
   const skillMentions = requirements.mandatorySkills.reduce((count, skill) => {
     const regex = new RegExp(skill, "gi");
     const matches = text.match(regex);
     return count + (matches ? matches.length : 0);
   }, 0);
 
-  if (skillMentions > 0 && skillMentions / wordCount > 0.05) {
+  // Stuffing = same skills mentioned way too many times relative to resume length
+  const stuffingRatio = wordCount > 0 ? skillMentions / wordCount : 0;
+  if (stuffingRatio > 0.08) { // Very aggressive stuffing
+    penalties.push({
+      reason: "Keyword stuffing detected - skills over-repeated",
+      multiplier: 1,
+      deduction: 12,
+      applied: true,
+    });
+  } else if (stuffingRatio > 0.05) { // Moderate stuffing
     penalties.push({
       reason: "Potential keyword stuffing detected",
-      multiplier: 0.7,
+      multiplier: 1,
+      deduction: 6,
       applied: true,
     });
   } else {
     penalties.push({
-      reason: "Potential keyword stuffing detected",
-      multiplier: 0.7,
+      reason: "Keyword stuffing detected",
+      multiplier: 1,
+      deduction: 12,
       applied: false,
     });
   }
 
-  // Penalty: No quantification in achievements
-  const hasQuantification = /\d+%|\d+\s*(users?|increase|decrease|improvement)/i.test(text);
-  if (!hasQuantification && scores.projectQuality.score > 0) {
+  // Penalty 3: Very short resume (max -10)
+  if (wordCount < 80) {
     penalties.push({
-      reason: "No quantified achievements",
-      multiplier: 0.85,
+      reason: "Resume too short (< 80 words)",
+      multiplier: 1,
+      deduction: 10,
+      applied: true,
+    });
+  } else if (wordCount < 120) {
+    penalties.push({
+      reason: "Resume is brief (< 120 words)",
+      multiplier: 1,
+      deduction: 5,
       applied: true,
     });
   } else {
     penalties.push({
-      reason: "No quantified achievements",
-      multiplier: 0.85,
-      applied: false,
-    });
-  }
-
-  // Penalty: Very short resume
-  if (wordCount < 100) {
-    penalties.push({
-      reason: "Resume too short (< 100 words)",
-      multiplier: 0.6,
-      applied: true,
-    });
-  } else {
-    penalties.push({
-      reason: "Resume too short (< 100 words)",
-      multiplier: 0.6,
+      reason: "Resume length adequate",
+      multiplier: 1,
+      deduction: 0,
       applied: false,
     });
   }
@@ -500,32 +556,28 @@ function calculatePenalties(
 }
 
 /**
- * Apply hard caps to prevent inflated scores
+ * Apply soft caps - less harsh than hard caps
+ * Only applies to extreme cases
  */
-function applyHardCaps(
+function applySoftCaps(
   score: number,
   scores: { coreSkills: ComponentScore; projectQuality: ComponentScore; experienceDepth: ComponentScore }
 ): number {
-  // Hard cap: Cannot score above 55 without project evidence
-  if (scores.projectQuality.score < 10) {
-    score = Math.min(score, 55);
+  // Soft cap: Without ANY projects, max 65 (still fair for skill-heavy resumes)
+  if (scores.projectQuality.score <= 5) {
+    score = Math.min(score, 65);
   }
 
-  // Hard cap: Cannot score above 70 without quantified achievements
-  if (scores.projectQuality.score < 15) {
-    score = Math.min(score, 70);
-  }
-
-  // Hard cap: Cannot score above 60 without experience section
-  if (scores.experienceDepth.score < 5) {
-    score = Math.min(score, 60);
+  // Soft cap: Without skills OR projects, max 50
+  if (scores.coreSkills.score < 10 && scores.projectQuality.score < 10) {
+    score = Math.min(score, 50);
   }
 
   return score;
 }
 
 /**
- * Generate strengths based on scores (always returns at least one)
+ * Generate strengths based on scores
  */
 function generateStrengths(
   scores: { 
@@ -538,36 +590,42 @@ function generateStrengths(
 ): string[] {
   const strengths: string[] = [];
 
-  if (scores.coreSkills.score >= 20) {
-    strengths.push("Strong alignment with required technical skills");
-  } else if (scores.coreSkills.score >= 10) {
-    strengths.push("Good foundation of relevant skills");
+  if (scores.coreSkills.score >= 25) {
+    strengths.push("Excellent alignment with required technical skills");
+  } else if (scores.coreSkills.score >= 18) {
+    strengths.push("Strong foundation of relevant skills");
+  } else if (scores.coreSkills.score >= 12) {
+    strengths.push("Good coverage of core skills");
   }
 
-  if (scores.projectQuality.score >= 20) {
+  if (scores.projectQuality.score >= 22) {
     strengths.push("Well-documented projects with quantified impact");
+  } else if (scores.projectQuality.score >= 15) {
+    strengths.push("Solid project experience demonstrates practical skills");
   } else if (scores.projectQuality.score >= 10) {
-    strengths.push("Project experience demonstrates practical application");
+    strengths.push("Project work shows hands-on experience");
   }
 
   if (scores.experienceDepth.score >= 15) {
     strengths.push("Clear, action-oriented experience descriptions");
+  } else if (scores.experienceDepth.score >= 10) {
+    strengths.push("Experience section well-structured");
   }
 
   if (scores.resumeStructure.score >= 12) {
-    strengths.push("Well-structured resume with all essential sections");
+    strengths.push("Well-organized resume with essential sections");
   }
 
   // Always return at least one strength
   if (strengths.length === 0) {
-    strengths.push("Resume submitted for analysis - room for improvement identified");
+    strengths.push("Resume submitted for analysis - areas for growth identified");
   }
 
   return strengths;
 }
 
 /**
- * Generate improvements based on gaps (always returns at least one)
+ * Generate improvements based on gaps
  */
 function generateImprovements(
   scores: { 
@@ -581,35 +639,39 @@ function generateImprovements(
 ): string[] {
   const improvements: string[] = [];
 
-  if (scores.coreSkills.score < 15) {
+  if (scores.coreSkills.score < 18) {
     const missing = requirements.mandatorySkills.filter((s) => !text.includes(s));
     if (missing.length > 0) {
       improvements.push(`Add experience with: ${missing.slice(0, 3).join(", ")}`);
     }
   }
 
-  if (scores.projectQuality.score < 15) {
-    improvements.push("Add 2-3 relevant projects with measurable outcomes");
+  if (scores.projectQuality.score < 18) {
+    improvements.push("Include 2-3 relevant projects with clear descriptions");
   }
 
-  if (!/\d+%|\d+\s*(users?|increase)/i.test(text)) {
+  if (!/\d+%|\d+\s*(users?|increase|improvement)/i.test(text)) {
     improvements.push("Quantify achievements with numbers, percentages, or metrics");
   }
 
-  if (scores.experienceDepth.score < 10) {
-    improvements.push("Use action verbs and add dates to experience entries");
+  if (scores.experienceDepth.score < 12) {
+    improvements.push("Use strong action verbs (built, developed, led, achieved)");
   }
 
   if (scores.resumeStructure.score < 10) {
-    improvements.push("Ensure all sections are clearly labeled (Skills, Projects, Experience)");
+    improvements.push("Ensure clear section labels (Skills, Projects, Experience)");
+  }
+
+  if (!/github|portfolio|linkedin/i.test(text)) {
+    improvements.push("Add GitHub or portfolio links to showcase your work");
   }
 
   // Always return at least one improvement
   if (improvements.length === 0) {
-    improvements.push("Consider adding more specific examples to strengthen your profile");
+    improvements.push("Consider adding more specific examples to further strengthen your profile");
   }
 
-  return improvements;
+  return improvements.slice(0, 4); // Max 4 improvements
 }
 
 /**
@@ -620,6 +682,6 @@ function determineConfidence(text: string, roleMode: RoleMode): "high" | "medium
   
   if (wordCount < 50) return "low";
   if (roleMode === "extended") return "medium";
-  if (wordCount > 200) return "high";
+  if (wordCount > 250) return "high";
   return "medium";
 }
