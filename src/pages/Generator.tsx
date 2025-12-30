@@ -91,10 +91,7 @@ export default function Generator() {
             <Link to="/" className="flex items-center gap-3">
               <img src={logo} alt="Resumate" className="h-10 w-auto" />
             </Link>
-            <h1 className="text-lg font-bold text-primary flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              ATS Resume Builder
-            </h1>
+            <h1 className="text-lg font-bold text-primary">Resume Builder</h1>
             <FeedbackDialog pageName="Generator Page" />
           </div>
         </header>
