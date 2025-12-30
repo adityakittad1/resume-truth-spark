@@ -1,13 +1,18 @@
 /**
  * File Upload Component
- * Handles PDF and DOCX resume uploads with drag-and-drop
+ * Handles PDF and DOCX resume uploads with proper text extraction
  */
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, FileText, X, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, X, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import * as pdfjsLib from "pdfjs-dist";
+import mammoth from "mammoth";
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface FileUploadProps {
   onFileSelect: (file: File | null, text: string | null) => void;
@@ -19,47 +24,60 @@ const ACCEPTED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Extract text from file
+  // Extract text from PDF using pdf.js
+  const extractPdfText = async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      let fullText = "";
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + "\n";
+      }
+      
+      return fullText.trim();
+    } catch (err) {
+      console.error("PDF extraction error:", err);
+      throw new Error("Failed to extract text from PDF");
+    }
+  };
+
+  // Extract text from DOCX using mammoth
+  const extractDocxText = async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value.trim();
+    } catch (err) {
+      console.error("DOCX extraction error:", err);
+      throw new Error("Failed to extract text from DOCX");
+    }
+  };
+
+  // Main extraction function
   const extractText = async (file: File): Promise<string> => {
-    // For demo purposes, we'll extract text client-side
-    // In production, this would use a proper PDF/DOCX parser
-    
-    // Simple text extraction for supported formats
     if (file.type === "application/pdf") {
-      // PDF extraction would require pdf.js or similar
-      // For now, return placeholder that triggers file read
-      return await readFileAsText(file);
+      return await extractPdfText(file);
     }
     
     if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-      // DOCX extraction would require mammoth or similar
-      return await readFileAsText(file);
+      return await extractDocxText(file);
     }
 
-    return "";
-  };
-
-  const readFileAsText = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        // Basic extraction - in production use proper parsers
-        resolve(content || "");
-      };
-      reader.onerror = reject;
-      
-      // For binary files, we'd need specialized libraries
-      // This is a simplified version
-      reader.readAsText(file);
-    });
+    throw new Error("Unsupported file type");
   };
 
   const validateFile = (file: File): string | null => {
@@ -67,7 +85,7 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
       return "Please upload a PDF or DOCX file";
     }
     if (file.size > MAX_FILE_SIZE) {
-      return "File size must be less than 5MB";
+      return "File size must be less than 10MB";
     }
     return null;
   };
@@ -85,9 +103,17 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
     
     try {
       const text = await extractText(file);
+      
+      if (!text || text.length < 50) {
+        setError("Could not extract enough text from the file. Please ensure your resume contains readable text.");
+        onFileSelect(null, null);
+        return;
+      }
+      
       onFileSelect(file, text);
     } catch (err) {
-      setError("Failed to read file. Please try a different file.");
+      console.error("File processing error:", err);
+      setError("Failed to read file. Please try a different file or ensure it contains readable text.");
       onFileSelect(null, null);
     } finally {
       setIsProcessing(false);
@@ -146,7 +172,7 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
                 {selectedFile.name}
               </p>
               <p className="text-xs text-muted-foreground">
-                {(selectedFile.size / 1024).toFixed(1)} KB
+                {(selectedFile.size / 1024).toFixed(1)} KB - Ready for analysis
               </p>
             </div>
             <Button
@@ -191,14 +217,18 @@ export function FileUpload({ onFileSelect, selectedFile }: FileUploadProps) {
                 className="flex flex-col items-center gap-3"
               >
                 <div className="p-3 rounded-full bg-primary/10">
-                  <Upload className="w-6 h-6 text-primary" />
+                  {isProcessing ? (
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                  ) : (
+                    <Upload className="w-6 h-6 text-primary" />
+                  )}
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">
-                    {isProcessing ? "Processing..." : "Drop your resume here"}
+                    {isProcessing ? "Extracting text from resume..." : "Drop your resume here"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    or click to browse (PDF, DOCX)
+                    or click to browse (PDF, DOCX up to 10MB)
                   </p>
                 </div>
               </motion.div>
