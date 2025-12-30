@@ -27,6 +27,12 @@ const ROLE_REQUIREMENTS: Record<AllRoles, {
     projectIndicators: ["website", "web app", "ui", "frontend", "landing page", "dashboard"],
     experienceKeywords: ["developed", "built", "designed", "implemented", "created"],
   },
+  "fullstack-developer": {
+    mandatorySkills: ["javascript", "react", "node", "database", "api"],
+    optionalSkills: ["typescript", "python", "sql", "mongodb", "express", "next.js", "graphql", "docker", "git"],
+    projectIndicators: ["full stack", "web app", "api", "frontend", "backend", "database", "deployed"],
+    experienceKeywords: ["built", "developed", "deployed", "integrated", "architected", "implemented"],
+  },
   "backend-fullstack": {
     mandatorySkills: ["api", "database", "server", "backend"],
     optionalSkills: ["node", "python", "java", "sql", "mongodb", "express", "django", "rest", "graphql"],

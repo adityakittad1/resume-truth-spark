@@ -14,6 +14,12 @@ export const CORE_ROLES: RoleInfo[] = [
     isCore: true,
   },
   {
+    id: "fullstack-developer",
+    label: "Full Stack Developer",
+    description: "React, Node.js, databases, APIs, frontend & backend",
+    isCore: true,
+  },
+  {
     id: "backend-fullstack",
     label: "Backend / Full-Stack",
     description: "APIs, databases, server-side logic, Node.js, Python",
