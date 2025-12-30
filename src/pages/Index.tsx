@@ -5,13 +5,11 @@ import {
   Target, 
   Lightbulb, 
   ArrowRight, 
-  FileText, 
   Upload, 
   CheckCircle2,
   MessageSquare,
   Shield,
   BarChart3,
-  Sparkles,
   GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -112,17 +110,6 @@ const Index = () => {
                   <Link to="/analyze">
                     Review My Resume
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="group text-lg px-8 py-6 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300"
-                >
-                  <Link to="/generator">
-                    <FileText className="mr-2 h-5 w-5" />
-                    ATS Resume Builder
                   </Link>
                 </Button>
               </div>
@@ -321,38 +308,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ATS Resume Builder Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <motion.div
-            className="max-w-4xl mx-auto bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/30 rounded-2xl p-8 md:p-12 text-center"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-          >
-            <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="w-8 h-8 text-accent" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              Need a New Resume?
-            </h2>
-            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-              Build an ATS-optimized resume from scratch with our guided builder. Choose from professional templates designed to pass screening systems.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground"
-            >
-              <Link to="/generator">
-                <FileText className="mr-2 h-5 w-5" />
-                Start Building
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Final CTA Section */}
       <section className="py-20 bg-primary/5">

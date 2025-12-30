@@ -21,9 +21,6 @@ const Footer = () => {
             <Link to="/analyze" className="text-muted-foreground hover:text-foreground transition-colors">
               Analyze
             </Link>
-            <Link to="/generator" className="text-muted-foreground hover:text-foreground transition-colors">
-              Generator
-            </Link>
             <motion.a
               href="https://www.linkedin.com/company/resumate-io/"
               target="_blank"
