@@ -273,59 +273,51 @@ const Index = () => {
               animate={{ opacity: 1, x: 0, rotateY: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-              {/* Floating elements */}
+              {/* Floating check icon */}
               <motion.div
-                className="absolute -top-8 -left-8 w-20 h-20 bg-success/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-success/30"
-                animate={{ y: [0, -10, 0] }}
+                className="absolute -top-4 -left-4 w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-success/30"
+                animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                <CheckCircle2 className="w-10 h-10 text-success" />
-              </motion.div>
-              
-              <motion.div
-                className="absolute -bottom-4 -right-4 w-16 h-16 bg-primary/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-primary/30"
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Target className="w-8 h-8 text-primary" />
+                <CheckCircle2 className="w-6 h-6 text-success" />
               </motion.div>
 
-              {/* Main card */}
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-2xl">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg shadow-primary/25">
-                    <FileSearch className="w-6 h-6 text-primary-foreground" />
+              {/* Main card - Compact version */}
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 shadow-xl max-w-xs">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg shadow-primary/25">
+                    <FileSearch className="w-4 h-4 text-primary-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground text-lg">Resume Analysis</h3>
-                    <p className="text-sm text-muted-foreground">Just completed</p>
+                    <h3 className="font-semibold text-foreground text-sm">Resume Analysis</h3>
+                    <p className="text-xs text-muted-foreground">Just completed</p>
                   </div>
                 </div>
 
-                {/* Score Circle */}
-                <div className="flex justify-center mb-8">
-                  <div className="relative w-40 h-40">
+                {/* Score Circle - Smaller */}
+                <div className="flex justify-center mb-5">
+                  <div className="relative w-24 h-24">
                     <svg className="w-full h-full transform -rotate-90">
                       <circle
-                        cx="80"
-                        cy="80"
-                        r="70"
+                        cx="48"
+                        cy="48"
+                        r="40"
                         stroke="currentColor"
-                        strokeWidth="12"
+                        strokeWidth="8"
                         fill="none"
                         className="text-muted/20"
                       />
                       <motion.circle
-                        cx="80"
-                        cy="80"
-                        r="70"
+                        cx="48"
+                        cy="48"
+                        r="40"
                         stroke="url(#scoreGradient)"
-                        strokeWidth="12"
+                        strokeWidth="8"
                         fill="none"
                         strokeLinecap="round"
-                        strokeDasharray={440}
-                        initial={{ strokeDashoffset: 440 }}
-                        animate={{ strokeDashoffset: 440 - (440 * 85) / 100 }}
+                        strokeDasharray={251}
+                        initial={{ strokeDashoffset: 251 }}
+                        animate={{ strokeDashoffset: 251 - (251 * 85) / 100 }}
                         transition={{ duration: 2, delay: 0.8, ease: "easeOut" }}
                       />
                       <defs>
@@ -341,30 +333,30 @@ const Index = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 1.5, type: "spring" }}
                     >
-                      <span className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                         85
                       </span>
-                      <span className="text-sm text-muted-foreground">out of 100</span>
+                      <span className="text-[10px] text-muted-foreground">out of 100</span>
                     </motion.div>
                   </div>
                 </div>
 
-                {/* Feedback items */}
-                <div className="space-y-3">
+                {/* Feedback items - Compact */}
+                <div className="space-y-2">
                   {[
                     { text: "Strong technical skills", delay: 1.8 },
                     { text: "Good project descriptions", delay: 2.0 },
-                    { text: "Clear contact information", delay: 2.2 },
+                    { text: "Clear contact info", delay: 2.2 },
                   ].map((item, i) => (
                     <motion.div
                       key={i}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-success/10 border border-success/20"
+                      className="flex items-center gap-2 p-2 rounded-lg bg-success/10 border border-success/20"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: item.delay }}
                     >
-                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-                      <span className="text-sm text-foreground">{item.text}</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" />
+                      <span className="text-xs text-foreground">{item.text}</span>
                     </motion.div>
                   ))}
                 </div>
