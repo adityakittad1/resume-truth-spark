@@ -9,6 +9,7 @@ export type RoleMode = "core" | "extended";
 // Core roles - well-tested, recommended for most users
 export type CoreRole = 
   | "frontend-developer"
+  | "fullstack-developer"
   | "backend-fullstack"
   | "data-analyst"
   | "ai-ml-intern"
