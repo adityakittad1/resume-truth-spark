@@ -5,6 +5,7 @@ import {
   Target, 
   Lightbulb, 
   ArrowRight, 
+  FileText,
   Upload, 
   CheckCircle2,
   MessageSquare,
@@ -17,6 +18,7 @@ import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { PageTransition } from "@/components/PageTransition";
 import Footer from "@/components/Footer";
 import logo from "@/assets/logo.png";
+import { toast } from "sonner";
 
 const Index = () => {
   const steps = [
@@ -111,6 +113,15 @@ const Index = () => {
                     Review My Resume
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="group text-lg px-8 py-6 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300"
+                  onClick={() => toast.info("Coming Soon!", { description: "ATS Resume Builder is under development." })}
+                >
+                  <FileText className="mr-2 h-5 w-5" />
+                  ATS Resume Builder
                 </Button>
               </div>
 
