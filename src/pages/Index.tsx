@@ -14,8 +14,13 @@ import {
   GraduationCap,
   Zap,
   Users,
-  Award
+  Award,
+  Sparkles,
+  Download,
+  FilePlus,
+  ScanSearch
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { PageTransition } from "@/components/PageTransition";
@@ -28,25 +33,16 @@ const Index = () => {
   const { scrollYProgress } = useScroll();
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
-  const steps = [
-    {
-      number: 1,
-      icon: Upload,
-      title: "Upload Resume",
-      description: "Drop your PDF, DOC, or DOCX file securely",
-    },
-    {
-      number: 2,
-      icon: Target,
-      title: "Choose Role",
-      description: "Select from 17+ role profiles",
-    },
-    {
-      number: 3,
-      icon: MessageSquare,
-      title: "Get Feedback",
-      description: "Receive actionable insights instantly",
-    },
+  const analyzerSteps = [
+    { icon: Upload, title: "Upload Resume", subtitle: "PDF, DOC, or DOCX" },
+    { icon: Target, title: "Choose Role", subtitle: "Core or Advanced profile" },
+    { icon: ScanSearch, title: "Get Feedback", subtitle: "ATS + recruiter insights" },
+  ];
+
+  const generatorSteps = [
+    { icon: FilePlus, title: "Start or Upload", subtitle: "Fresh or existing resume" },
+    { icon: Sparkles, title: "AI Enhances", subtitle: "ATS-aligned optimization" },
+    { icon: Download, title: "Download PDF", subtitle: "Ready to apply" },
   ];
 
   const features = [
@@ -409,58 +405,126 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 relative">
+      <section className="py-20 relative">
         <div className="container mx-auto px-4">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-3">
               Simple Process
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               How It Works
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
-            {/* Connection line */}
-            <div className="hidden md:block absolute top-24 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50" />
-            
-            {steps.map((step, index) => (
+          {/* Dual Product Flows */}
+          <div className="max-w-5xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Resume Analyzer Flow */}
               <motion.div
-                key={step.number}
-                className="relative"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border/50 rounded-xl p-5 hover:border-primary/30 transition-all duration-300"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
               >
-                {/* Step number */}
-                <motion.div 
-                  className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground text-sm font-bold flex items-center justify-center z-10 shadow-lg shadow-primary/30"
-                  whileHover={{ scale: 1.2 }}
-                >
-                  {step.number}
-                </motion.div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileSearch className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-base">Resume Analyzer</h3>
+                    <p className="text-xs text-muted-foreground">Get honest, actionable feedback</p>
+                  </div>
+                </div>
 
-                <motion.div 
-                  className="bg-card border border-border/50 rounded-2xl p-8 pt-10 h-full hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group"
-                  whileHover={{ y: -8 }}
+                <div className="space-y-2.5">
+                  {analyzerSteps.map((step, index) => (
+                    <motion.div
+                      key={step.title}
+                      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-primary">{index + 1}</span>
+                      </div>
+                      <step.icon className="w-4 h-4 text-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground">{step.title}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{step.subtitle}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <Button
+                  asChild
+                  size="sm"
+                  className="w-full mt-4 bg-primary hover:bg-primary/90"
                 >
-                  <motion.div 
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-6 group-hover:from-primary/20 group-hover:to-accent/20 transition-all duration-500"
-                    whileHover={{ rotate: 10 }}
-                  >
-                    <step.icon className="w-8 h-8 text-primary" />
-                  </motion.div>
-                  <h3 className="font-semibold text-foreground text-lg mb-3 text-center">{step.title}</h3>
-                  <p className="text-muted-foreground text-center">{step.description}</p>
-                </motion.div>
+                  <Link to="/analyze">
+                    Try Analyzer
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </motion.div>
-            ))}
+
+              {/* ATS Resume Generator Flow */}
+              <motion.div
+                className="bg-card border border-border/50 rounded-xl p-5 hover:border-accent/30 transition-all duration-300"
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-base">ATS Resume Generator</h3>
+                    <p className="text-xs text-muted-foreground">Build an optimized resume</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  {generatorSteps.map((step, index) => (
+                    <motion.div
+                      key={step.title}
+                      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-accent">{index + 1}</span>
+                      </div>
+                      <step.icon className="w-4 h-4 text-accent flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground">{step.title}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{step.subtitle}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full mt-4 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => toast.info("Coming Soon!", { description: "ATS Resume Generator is under development." })}
+                >
+                  Coming Soon
+                  <Sparkles className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
