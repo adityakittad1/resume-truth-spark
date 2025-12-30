@@ -545,21 +545,39 @@ const Index = () => {
               Get your personalized feedback in under 30 seconds. No signup, no payment, just honest results.
             </p>
             
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button
-                asChild
-                size="lg"
-                className="text-lg px-12 py-7 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-2xl shadow-primary/30 hover:shadow-primary/40 transition-all duration-300"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Link to="/analyze">
-                  Analyze My Resume Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </motion.div>
+                <Button
+                  asChild
+                  size="lg"
+                  className="text-lg px-10 py-7 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-2xl shadow-primary/30 hover:shadow-primary/40 transition-all duration-300"
+                >
+                  <Link to="/analyze">
+                    <FileSearch className="mr-2 h-5 w-5" />
+                    Analyze My Resume
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-10 py-7 border-2 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300"
+                  onClick={() => toast.info("Coming Soon!", { description: "ATS Resume Builder is under development." })}
+                >
+                  <FileText className="mr-2 h-5 w-5" />
+                  ATS Resume Builder
+                </Button>
+              </motion.div>
+            </div>
           </motion.div>
         </div>
       </section>
