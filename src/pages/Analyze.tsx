@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageTransition } from "@/components/PageTransition";
@@ -15,8 +15,10 @@ import { FileUpload } from "@/components/FileUpload";
 import { RoleSelector } from "@/components/RoleSelector";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
 import { AnalysisResults } from "@/components/AnalysisResults";
+import Footer from "@/components/Footer";
 import { analyzeResume } from "@/lib/analyzer";
 import { AllRoles, RoleMode, AnalysisResult } from "@/types/analyzer";
+import logo from "@/assets/logo.png";
 
 type Step = "upload" | "role" | "analyzing" | "results";
 
@@ -71,10 +73,9 @@ export default function Analyze() {
         {/* Header */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Home
-            </Button>
+            <Link to="/" className="flex items-center gap-3">
+              <img src={logo} alt="Resumate" className="h-8 w-auto" />
+            </Link>
             <h1 className="text-lg font-bold text-primary">Resume Analyzer</h1>
             <FeedbackDialog pageName="Analyze Page" />
           </div>
@@ -183,6 +184,8 @@ export default function Analyze() {
             )}
           </AnimatePresence>
         </main>
+
+        <Footer />
       </div>
     </PageTransition>
   );
