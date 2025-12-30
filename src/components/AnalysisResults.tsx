@@ -235,7 +235,7 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                     <li key={index} className="flex items-center justify-between text-sm">
                       <span className="text-foreground">{penalty.reason}</span>
                       <Badge variant="destructive">
-                        {Math.round((1 - penalty.multiplier) * 100)}% reduction
+                        -{penalty.deduction} pts
                       </Badge>
                     </li>
                   ))}

@@ -71,7 +71,8 @@ export interface ComponentScore {
 
 export interface PenaltyInfo {
   reason: string;
-  multiplier: number;
+  multiplier: number; // Legacy field, kept for compatibility
+  deduction: number;  // Actual points deducted
   applied: boolean;
 }
 
