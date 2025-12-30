@@ -170,12 +170,13 @@ const Index = () => {
       {/* Hero Section */}
       <section className="pt-32 pb-20 relative">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
-            {/* Left Content */}
+          <div className="max-w-4xl mx-auto">
+            {/* Left Content - Now centered without right card */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
+              className="text-center"
             >
               <motion.span 
                 variants={itemVariants}
@@ -190,7 +191,7 @@ const Index = () => {
                 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight tracking-tight"
               >
                 Get honest feedback{" "}
-                <span className="relative">
+                <span className="relative inline-block">
                   <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
                     on your resume.
                   </span>
@@ -205,12 +206,12 @@ const Index = () => {
               
               <motion.p
                 variants={itemVariants}
-                className="text-lg text-muted-foreground mb-8 max-w-lg leading-relaxed"
+                className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed"
               >
                 Built for students. Clear, practical, and recruiter-focused. Know exactly what's working and what needs improvement.
               </motion.p>
 
-              <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 mb-8">
+              <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 <Button
                   asChild
                   size="lg"
@@ -233,7 +234,7 @@ const Index = () => {
                 </Button>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="flex items-center gap-4">
+              <motion.div variants={itemVariants} className="flex items-center gap-6 justify-center">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <CheckCircle2 className="w-4 h-4 text-success" />
                   <span>No signup required</span>
@@ -245,7 +246,7 @@ const Index = () => {
               </motion.div>
 
               {/* Trust badges */}
-              <motion.div variants={itemVariants} className="flex items-center gap-4 mt-8 pt-8 border-t border-border/50">
+              <motion.div variants={itemVariants} className="flex items-center gap-4 justify-center mt-10 pt-8 border-t border-border/50">
                 <div className="flex -space-x-3">
                   {["A", "D", "P", "S", "M"].map((letter, i) => (
                     <motion.div
@@ -259,108 +260,11 @@ const Index = () => {
                     </motion.div>
                   ))}
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col text-left">
                   <span className="text-sm font-medium text-foreground">Trusted by students</span>
                   <span className="text-xs text-muted-foreground">from top universities</span>
                 </div>
               </motion.div>
-            </motion.div>
-
-            {/* Right Content - Score Preview Card */}
-            <motion.div
-              className="relative hidden lg:block"
-              initial={{ opacity: 0, x: 40, rotateY: -10 }}
-              animate={{ opacity: 1, x: 0, rotateY: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              {/* Floating check icon */}
-              <motion.div
-                className="absolute -top-4 -left-4 w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-success/30"
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <CheckCircle2 className="w-6 h-6 text-success" />
-              </motion.div>
-
-              {/* Main card - Compact version */}
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 shadow-xl max-w-xs">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg shadow-primary/25">
-                    <FileSearch className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground text-sm">Resume Analysis</h3>
-                    <p className="text-xs text-muted-foreground">Just completed</p>
-                  </div>
-                </div>
-
-                {/* Score Circle - Smaller */}
-                <div className="flex justify-center mb-5">
-                  <div className="relative w-24 h-24">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle
-                        cx="48"
-                        cy="48"
-                        r="40"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="none"
-                        className="text-muted/20"
-                      />
-                      <motion.circle
-                        cx="48"
-                        cy="48"
-                        r="40"
-                        stroke="url(#scoreGradient)"
-                        strokeWidth="8"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={251}
-                        initial={{ strokeDashoffset: 251 }}
-                        animate={{ strokeDashoffset: 251 - (251 * 85) / 100 }}
-                        transition={{ duration: 2, delay: 0.8, ease: "easeOut" }}
-                      />
-                      <defs>
-                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" />
-                          <stop offset="100%" stopColor="hsl(var(--accent))" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <motion.div 
-                      className="absolute inset-0 flex flex-col items-center justify-center"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.5, type: "spring" }}
-                    >
-                      <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        85
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">out of 100</span>
-                    </motion.div>
-                  </div>
-                </div>
-
-                {/* Feedback items - Compact */}
-                <div className="space-y-2">
-                  {[
-                    { text: "Strong technical skills", delay: 1.8 },
-                    { text: "Good project descriptions", delay: 2.0 },
-                    { text: "Clear contact info", delay: 2.2 },
-                  ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-success/10 border border-success/20"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: item.delay }}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" />
-                      <span className="text-xs text-foreground">{item.text}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
             </motion.div>
           </div>
         </div>
