@@ -20,14 +20,12 @@ import {
   FilePlus,
   ScanSearch
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { PageTransition } from "@/components/PageTransition";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Footer from "@/components/Footer";
 import logo from "@/assets/logo.png";
-import { toast } from "sonner";
 
 const Index = () => {
   const { scrollYProgress } = useScroll();
@@ -224,13 +222,15 @@ const Index = () => {
                   </Link>
                 </Button>
                 <Button
+                  asChild
                   size="lg"
                   variant="outline"
                   className="group text-lg px-8 py-6 border-2 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300"
-                  onClick={() => toast.info("Coming Soon!", { description: "ATS Resume Builder is under development." })}
                 >
-                  <FileText className="mr-2 h-5 w-5" />
-                  ATS Resume Builder
+                  <Link to="/generator">
+                    <FileText className="mr-2 h-5 w-5" />
+                    ATS Resume Builder
+                  </Link>
                 </Button>
               </motion.div>
 
@@ -411,13 +411,15 @@ const Index = () => {
                 </div>
 
                 <Button
+                  asChild
                   size="sm"
                   variant="outline"
                   className="w-full mt-4 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground"
-                  onClick={() => toast.info("Coming Soon!", { description: "ATS Resume Generator is under development." })}
                 >
-                  Coming Soon
-                  <Sparkles className="ml-1.5 h-3.5 w-3.5" />
+                  <Link to="/generator">
+                    Try Generator
+                    <Sparkles className="ml-1.5 h-3.5 w-3.5" />
+                  </Link>
                 </Button>
               </motion.div>
             </div>
@@ -528,13 +530,15 @@ const Index = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <Button
+                  asChild
                   size="lg"
                   variant="outline"
                   className="text-lg px-10 py-7 border-2 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300"
-                  onClick={() => toast.info("Coming Soon!", { description: "ATS Resume Builder is under development." })}
                 >
-                  <FileText className="mr-2 h-5 w-5" />
-                  ATS Resume Builder
+                  <Link to="/generator">
+                    <FileText className="mr-2 h-5 w-5" />
+                    ATS Resume Builder
+                  </Link>
                 </Button>
               </motion.div>
             </div>
