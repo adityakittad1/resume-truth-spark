@@ -227,10 +227,10 @@ const Index = () => {
                   variant="outline"
                   className="group text-lg px-8 py-6 border-2 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300"
                 >
-                  <Link to="/generator">
+                  <a href="https://adityakittad1.github.io/resume-builder-pro" target="_blank" rel="noopener noreferrer">
                     <FileText className="mr-2 h-5 w-5" />
                     ATS Resume Builder
-                  </Link>
+                  </a>
                 </Button>
               </motion.div>
 
@@ -416,10 +416,10 @@ const Index = () => {
                   variant="outline"
                   className="w-full mt-4 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground"
                 >
-                  <Link to="/generator">
+                  <a href="https://adityakittad1.github.io/resume-builder-pro" target="_blank" rel="noopener noreferrer">
                     Try Generator
                     <Sparkles className="ml-1.5 h-3.5 w-3.5" />
-                  </Link>
+                  </a>
                 </Button>
               </motion.div>
             </div>

@@ -247,11 +247,11 @@ export default function Analyze() {
                       className="w-full py-6 text-lg border-2 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground"
                       variant="outline"
                     >
-                      <Link to="/generator">
+                      <a href="https://adityakittad1.github.io/resume-builder-pro" target="_blank" rel="noopener noreferrer">
                         <FileText className="w-5 h-5 mr-2" />
                         ATS Resume Generator
                         <Sparkles className="w-4 h-4 ml-2" />
-                      </Link>
+                      </a>
                     </Button>
                   </motion.div>
                 </div>
