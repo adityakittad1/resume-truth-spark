@@ -7,6 +7,7 @@ import { ModeSelector } from "@/components/generator/ModeSelector";
 import { ResumeUploader } from "@/components/generator/ResumeUploader";
 import { ResumePreview } from "@/components/generator/ResumePreview";
 import { ImproveResumeFlow } from "@/components/generator/ImproveResumeFlow";
+import { ResumeForm } from "@/components/generator/ResumeForm";
 import { ResumeData, emptyResumeData } from "@/types/resume";
 
 type GeneratorStep = 'select' | 'upload' | 'improve' | 'form' | 'preview';
@@ -20,7 +21,7 @@ const Generator = () => {
     setMode(selectedMode);
     if (selectedMode === 'scratch') {
       setResumeData(emptyResumeData);
-      setStep('improve'); // Go to improve flow for editing
+      setStep('form'); // Go to form for manual entry
     } else {
       setStep('upload');
     }
@@ -82,6 +83,18 @@ const Generator = () => {
           />
         )}
 
+        {/* Step: Form (Start from Scratch) */}
+        {step === 'form' && (
+          <ResumeForm
+            initialData={resumeData}
+            onSubmit={(data) => {
+              setResumeData(data);
+              setStep('preview');
+            }}
+            onBack={handleBackToSelect}
+          />
+        )}
+
         {/* Step: Improve Flow */}
         {step === 'improve' && (
           <ImproveResumeFlow
@@ -90,7 +103,7 @@ const Generator = () => {
               setResumeData(data);
               setStep('preview');
             }}
-            onBack={() => mode === 'improve' ? setStep('upload') : handleBackToSelect()}
+            onBack={() => setStep('upload')}
           />
         )}
 
