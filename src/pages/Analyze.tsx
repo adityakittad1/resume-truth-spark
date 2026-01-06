@@ -1,6 +1,6 @@
 /**
  * Analyze Page - Resume Analysis Flow
- * Upload → Select Role → Analyze → View Results
+ * Upload → Validate → Select Role → Analyze → View Results
  */
 
 import { useState } from "react";
@@ -17,12 +17,14 @@ import { FileUpload } from "@/components/FileUpload";
 import { RoleSelector } from "@/components/RoleSelector";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
 import { AnalysisResults } from "@/components/AnalysisResults";
+import { ResumeRejectionMessage } from "@/components/ResumeRejectionMessage";
 import Footer from "@/components/Footer";
 import { analyzeResume } from "@/lib/analyzer";
+import { validateResume } from "@/lib/resumeValidator";
 import { AllRoles, RoleMode, AnalysisResult } from "@/types/analyzer";
 import logo from "@/assets/logo.png";
 
-type Step = "upload" | "role" | "analyzing" | "results";
+type Step = "upload" | "validating" | "rejected" | "role" | "analyzing" | "results";
 
 export default function Analyze() {
   const navigate = useNavigate();
@@ -41,6 +43,27 @@ export default function Analyze() {
   const handleRoleSelect = (role: AllRoles, mode: RoleMode) => {
     setSelectedRole(role);
     setRoleMode(mode);
+  };
+
+  // Validate resume before proceeding to role selection
+  const proceedToValidation = async () => {
+    if (!resumeText) return;
+    
+    setStep("validating");
+    
+    // Small delay for UX feedback
+    await new Promise(r => setTimeout(r, 800));
+    
+    const validation = validateResume(resumeText);
+    
+    if (!validation.isValid) {
+      console.log("Resume validation failed:", validation);
+      setStep("rejected");
+      return;
+    }
+    
+    // Valid resume - proceed to role selection
+    setStep("role");
   };
 
   const startAnalysis = async () => {
@@ -146,7 +169,7 @@ export default function Analyze() {
                       <Button
                         className="w-full py-6 text-lg shadow-lg shadow-primary/25"
                         disabled={!file}
-                        onClick={() => setStep("role")}
+                        onClick={proceedToValidation}
                       >
                         Continue
                         <ArrowRight className="w-5 h-5 ml-2" />
@@ -155,6 +178,33 @@ export default function Analyze() {
                   </CardContent>
                 </Card>
               </motion.div>
+            )}
+
+            {/* Step 1.5: Validating */}
+            {step === "validating" && (
+              <motion.div
+                key="validating"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <Card className="border-border/50 shadow-xl bg-card/80 backdrop-blur-sm">
+                  <CardContent className="py-12 text-center">
+                    <motion.div
+                      className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary mx-auto mb-6"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                    <p className="text-lg font-medium text-foreground">Validating document...</p>
+                    <p className="text-sm text-muted-foreground mt-2">Checking if this is a resume</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Step 1.5b: Rejected - Not a Resume */}
+            {step === "rejected" && (
+              <ResumeRejectionMessage onTryAgain={resetAnalysis} />
             )}
 
             {/* Step 2: Role Selection */}
@@ -247,11 +297,11 @@ export default function Analyze() {
                       className="w-full py-6 text-lg border-2 border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground"
                       variant="outline"
                     >
-                      <a href="https://adityakittad1.github.io/resume-builder-pro" target="_blank" rel="noopener noreferrer">
+                      <Link to="/generator">
                         <FileText className="w-5 h-5 mr-2" />
                         ATS Resume Generator
                         <Sparkles className="w-4 h-4 ml-2" />
-                      </a>
+                      </Link>
                     </Button>
                   </motion.div>
                 </div>
