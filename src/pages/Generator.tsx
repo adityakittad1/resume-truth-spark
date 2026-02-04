@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Linkedin } from "lucide-react";
+import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
+import { PageTransition } from "@/components/PageTransition";
 import { ModeSelector } from "@/components/generator/ModeSelector";
 import { ResumeUploader } from "@/components/generator/ResumeUploader";
 import { ResumePreview } from "@/components/generator/ResumePreview";
 import { ImproveResumeFlow } from "@/components/generator/ImproveResumeFlow";
 import { ResumeForm } from "@/components/generator/ResumeForm";
 import { ResumeData, emptyResumeData } from "@/types/resume";
+
 type GeneratorStep = 'select' | 'upload' | 'improve' | 'form' | 'preview';
 const Generator = () => {
   const [step, setStep] = useState<GeneratorStep>('select');
@@ -31,7 +34,8 @@ const Generator = () => {
     setStep('select');
     setMode(null);
   };
-  return <div className="min-h-screen bg-background flex flex-col">
+  return (
+    <PageTransition className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -97,6 +101,7 @@ const Generator = () => {
           </div>
         </div>
       </footer>
-    </div>;
+    </PageTransition>
+  );
 };
 export default Generator;
