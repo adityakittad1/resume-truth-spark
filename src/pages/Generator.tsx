@@ -53,7 +53,7 @@ const Generator = () => {
               <img
                 src={logo}
                 alt="Resumate"
-                className="h-16 md:h-20 rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
+                className="h-20 md:h-28 rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
               />
             </div>
           </div>
